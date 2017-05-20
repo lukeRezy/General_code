@@ -1,69 +1,67 @@
-import tkinter as tk
+import sys
+from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout
 
-class ScrollableFrame(tk.Frame):
-    def __init__(self, master, **kwargs):
-        tk.Frame.__init__(self, master, **kwargs)
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.pyplot as plt
 
-        # create a canvas object and a vertical scrollbar for scrolling it
-        self.vscrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
-        self.vscrollbar.pack(side='right', fill="y",  expand="false")
-        self.canvas = tk.Canvas(self,
-                                bg='#444444', bd=0,
-                                height=350,
-                                highlightthickness=0,
-                                yscrollcommand=self.vscrollbar.set)
-        self.canvas.pack(side="left", fill="both", expand="true")
-        self.vscrollbar.config(command=self.canvas.yview)
+import random
 
-        # reset the view
-        self.canvas.xview_moveto(0)
-        self.canvas.yview_moveto(0)
+def plot_data():
 
-        # create a frame inside the canvas which will be scrolled with it
-        self.interior = tk.Frame(self.canvas, **kwargs)
-        self.canvas.create_window(0, 0, window=self.interior, anchor="nw")
+    data = [[1,2,3,4], [4,3,2,1]]
 
-        self.bind('<Configure>', self.set_scrollregion)
+    class Window(QDialog):
+        def __init__(self, parent=None):
+            super(Window, self).__init__(parent)
+
+            for i in range(len(data)):
+                # a figure instance to plot on
+                self.figure = plt.figure()
+
+                # this is the Canvas Widget that displays the `figure`
+                # it takes the `figure` instance as a parameter to __init__
+                self.canvas = FigureCanvas(self.figure)
+
+                # this is the Navigation widget
+                # it takes the Canvas widget and a parent
+                self.toolbar = NavigationToolbar(self.canvas, self)
+
+                self.plot(i)
+
+                # set the layout
+                layout = QVBoxLayout()
+                layout.addWidget(self.toolbar)
+                layout.addWidget(self.canvas)
+            self.setLayout(layout)
+
+        def plot(self, i):
+            ''' plot some random stuff '''
+            # random data
+
+            # create an axis
+            ax1 = self.figure.add_subplot(111)
+            ax2 = ax1.twinx()
+
+            # discards the old graph
+            # ax.hold(False) # deprecated, see above
+
+            # plot data
+            ax1.plot(data[i], '*-')
+
+            # refresh canvas
+            self.canvas.draw()
 
 
-    def set_scrollregion(self, event=None):
-        """ Set the scroll region on the canvas"""
-        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
 
+
+
+    app = QApplication(sys.argv)
+
+    main = Window()
+    main.show()
+
+    sys.exit(app.exec_())
 
 if __name__ == '__main__':
-    root = tk.Tk()
-    checkbox_pane = ScrollableFrame(root, bg='#444444')
-    checkbox_pane.pack(expand="true", fill="both")
- 
-
-#from tkinter import *
-#root = Tk()
-#frame = Frame(root, bd=2, relief=SUNKEN)
-
-#frame.grid_rowconfigure(0, weight=1)
-#frame.grid_columnconfigure(0, weight=1)
-
-#xscrollbar = Scrollbar(frame, orient=HORIZONTAL)
-#xscrollbar.grid(row=1, column=0, sticky=E+W)
-
-#yscrollbar = Scrollbar(frame)
-#yscrollbar.grid(row=0, column=1, sticky=N+S)
-
-#canvas = Canvas(frame, bd=0,
-                #xscrollcommand=xscrollbar.set,
-                #yscrollcommand=yscrollbar.set)
-
-#canvas.grid(row=0, column=0, sticky=N+S+E+W)
-
-#xscrollbar.config(command=canvas.xview)
-#yscrollbar.config(command=canvas.yview)
-
-#canvas.configure(scrollregion=(0, 0, 1000, 1000))
-
-#frame.pack()
-
-#root.lift()
-#root.attributes('-topmost',True)
-#root.after_idle(root.attributes,'-topmost',False)
-#root.mainloop()
+    plot_data()
